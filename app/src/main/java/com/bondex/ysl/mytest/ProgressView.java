@@ -1,13 +1,23 @@
 package com.bondex.ysl.mytest;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.provider.ContactsContract;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.SurfaceHolder;
 import android.view.View;
+
+/**
+ * date: 2018/11/9
+ * Author: ysl
+ * description:
+ */
 
 /**
  * date: 2018/11/9
@@ -22,68 +32,70 @@ public class ProgressView extends View {
      */
     private int maxValue = 100;
 
-    private  Paint firstPaint;
-    private Paint secondPaint;
+    private Paint circlePaint;
+    private Paint progresspaint;
     private Paint textPaint;
 
     private float textSize = 60;
     private float circleWidth = 10;
-    float currentValue = 70;
+    float currentValue = 0;
     float alphaAngle = 0;
+
 
 
     public ProgressView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        init(context,attrs);
+        init(context, attrs);
     }
 
     public ProgressView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
-        init(context,attrs);
+        init(context, attrs);
     }
 
 
-    private void init(Context context,AttributeSet attrs){
+    @SuppressLint("ResourceAsColor")
+    private void init(Context context, AttributeSet attrs) {
 
-        firstPaint =  new Paint();
-        secondPaint = new Paint();
+        circlePaint = new Paint();
+        progresspaint = new Paint();
         textPaint = new Paint();
 
         int smallCircleColor = 0;
         int bigCircleColor = 0;
         int textColor = 0;
 
-        TypedArray ta = context.getTheme().obtainStyledAttributes(attrs,R.styleable.ProgressView,0,0);
+        TypedArray ta = context.getTheme().obtainStyledAttributes(attrs, R.styleable.ProgressView, 0, 0);
 
-        int n =ta.getIndexCount();
+        int n = ta.getIndexCount();
 
-        for (int i = 0; i < n; ++i){
+        for (int i = 0; i < n; ++i) {
 
             int attr = ta.getIndex(i);
-            switch (attr){
+            switch (attr) {
 
                 case R.styleable.ProgressView_smallCircleColor:
 
-                    smallCircleColor = ta.getColor(attr,Color.WHITE);
+                    smallCircleColor = ta.getColor(attr, Color.GRAY);
                     break;
                 case R.styleable.ProgressView_bigCircleColor:
 
-                    bigCircleColor = ta.getColor(attr,getResources().getColor(R.color.colorPrimary));
+                    bigCircleColor = ta.getColor(attr, Color.BLUE);
                     break;
                 case R.styleable.ProgressView_textColor:
 
-                    textColor = ta.getColor(attr,getResources().getColor(R.color.colorPrimary));
+                    textColor = ta.getColor(attr, Color.BLUE);
                     break;
 
                 case R.styleable.ProgressView_circleWidth:
 
-                    circleWidth =  ta.getFloat(attr,10);
+                    circleWidth = ta.getFloat(attr, 10);
                     break;
                 case R.styleable.ProgressView_textSize:
 
-                    textSize = ta.getFloat(attr,60);
+                    textSize = ta.getFloat(attr, 60);
                     break;
             }
 
@@ -91,12 +103,15 @@ public class ProgressView extends View {
         }
 
 
+        circlePaint.setColor(smallCircleColor);
+        circlePaint.setStyle(Paint.Style.FILL);
 
+        progresspaint.setColor(bigCircleColor);
+        progresspaint.setAntiAlias(true);
+        progresspaint.setStyle(Paint.Style.STROKE);
+        progresspaint.setStrokeWidth(circleWidth);
 
-        firstPaint.setColor(smallCircleColor);
-        secondPaint.setColor(bigCircleColor);
         textPaint.setColor(textColor);
-
         textPaint.setTextSize(textSize);
         textPaint.setTextAlign(Paint.Align.CENTER);
 
@@ -118,32 +133,45 @@ public class ProgressView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        int center = this.getWidth()/2;
-        int radius = center - (int)(circleWidth/2);
 
-        drawCircle(canvas,center,radius);
-        drawText(canvas,center, (int) currentValue);
+
+        int center = this.getWidth() / 2;
+        int radius = center - (int) (circleWidth / 2);
+
+        drawCircle(canvas, center, radius);
+        drawText(canvas, center, (int) currentValue);
     }
 
 
-    private void drawCircle(Canvas canvas,int center,int radius){
+    private void drawCircle(Canvas canvas, int center, int radius) {
 
 
-        RectF rectF = new RectF(center-radius,center-radius,center+radius,center+radius);
+        RectF rectF = new RectF(center - radius, center - radius, center + radius, center + radius);
         alphaAngle = currentValue * 360.0f / maxValue * 1.0f;
-        canvas.drawArc(rectF,-90,alphaAngle,false,secondPaint);
 
-        canvas.drawCircle(center,center,radius-circleWidth,firstPaint);
+        canvas.drawArc(rectF, -90, alphaAngle, false, progresspaint);
+
+
+        canvas.drawCircle(center, center, radius - circleWidth, circlePaint);
+
     }
 
 
-    private void drawText(Canvas canvas,int center,int currentValue){
+    private void drawText(Canvas canvas, int center, int currentValue) {
 
         Paint.FontMetricsInt fontMetrics = textPaint.getFontMetricsInt();
 
         int baseline = center + (fontMetrics.bottom - fontMetrics.top) / 2 - fontMetrics.bottom; // 计算文字的基线,方法见http://blog.csdn.net/harvic880925/article/details/50423762
 
-        canvas.drawText(currentValue+"%",center,baseline,textPaint);
+        canvas.drawText(currentValue + "%", center, baseline, textPaint);
+    }
+
+
+    public void setCurrentValue(float currentValue) {
+
+        this.currentValue = currentValue;
+        invalidate();
+
     }
 
 
